@@ -1,5 +1,6 @@
 import os
 import time
+import sys
 
 class Personagem:
     def __init__(self, nome_do_jogador):
@@ -116,9 +117,38 @@ class Game:
 def limpar_tela():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def tocar_som_menu():
-    # Emite um bipe sonoro estilo 8-bits no terminal
-    print('\a', end='')
+def tocar_bipe():
+    # Emite um bipe de áudio simulando estilo 8-bits no terminal
+    print('\a', end='', flush=True)
+
+# Função especial para ler as setas do teclado ao vivo (como um evento KeyDown)
+def ler_tecla():
+    if os.name == 'nt':  # Sistema Windows
+        import msvcrt
+        tecla = msvcrt.getch()
+        if tecla == b'\xe0':  # Prefixo das setas no Windows
+            tecla = msvcrt.getch()
+            if tecla == b'H': return 'cima'
+            if tecla == b'P': return 'baixo'
+        elif tecla in (b'\r', b'\n'):
+            return 'enter'
+        return tecla.decode('utf-8', 'ignore').lower()
+    else:  # Sistemas baseados em Linux/Mac (como o ambiente do GitHub/Replit)
+        import tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+            if ch == '\x1b':  # Prefixo da tecla ESC e das setas
+                ch += sys.stdin.read(2)
+                if ch == '\x1b[A': return 'cima'
+                if ch == '\x1b[B': return 'baixo'
+            elif ch in ('\r', '\n'):
+                return 'enter'
+            return ch.lower()
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 def menu_inicial():
     opcoes = ["Novo Jogo", "Carregar", "Créditos"]
@@ -126,67 +156,16 @@ def menu_inicial():
 
     while True:
         limpar_tela()
-        print("=" * 65)
-        # Título grande customizado "Aventuras de Ekul" em ASCII Art
+        print("=" * 75)
+        # Arte ASCII corrigida para BAIRRO MISTERIOSO
         print(r"""
-    _                   _                       _        _____ _          _ 
-   / \   __   __ ___   | |_   _   _  _ __    __| |      | ____| | __  _  | |
-  / _ \  \ \ / // _ \  | __| | | | || '__|  / _` |      |  _|   |/ / | | | |
- / ___ \  \ V /|  __/  | |_  | |_| || |    | (_| |      | |___  |   <  | |_| |
-/_/   \_\  \_/  \___|   \__|  \__,_||_|     \__,_|      |_____| |_|\_\  \___/ 
+   ____        _                     __  __ _     _            _                 
+  |  _ \      (_)                   |  \/  (_)   | |          (_)                
+  | |_) | __ _ _ _ __ _ __ ___      | \  / |_ ___| |_ ___ _ __ _  ___  ___  ___  
+  |  _ < / _` | | '__| '__/ _ \     | |\/| | / __| __/ _ \ '__| |/ _ \/ __|/ _ \ 
+  | |_) | (_| | | |  | | | (_) |    | |  | | \__ \ ||  __/ |  | | (_) \__ \ (_) |
+  |____/ \__,_|_|_|  |_|  \___/     |_|  |_|_|___/\__\___|_|  |_|\___/|___/\___/ 
         """)
-        print("=" * 65)
-        print("                      [ EDIÇÃO ANOS 80 ]                       \n")
+        print("                 [ EDIÇÃO DE INVESTIGAÇÃO ANOS 80 ]                 \n")
         
-        for i, opcao in enumerate(opcoes):
-            if i == linha_selecionada:
-                print(f"      >>  {opcao}  <<")
-            else:
-                print(f"          {opcao}")
-        
-        print("\n" + "=" * 65)
-        print("Controles: [W] Cima | [S] Baixo | [E] Escolher")
-        
-        comando = input("Ação: ").lower()
-
-        if comando == 'w' and linha_selecionada > 0:
-            linha_selecionada -= 1
-            tocar_som_menu()
-        elif comando == 's' and linha_selecionada < len(opcoes) - 1:
-            linha_selecionada += 1
-            tocar_som_menu()
-        elif comando == 'e':
-            tocar_som_menu()
-            return linha_selecionada
-
-# ==========================================
-# LAÇO PRINCIPAL DO PROGRAMA
-# ==========================================
-if __name__ == "__main__":
-    while True:
-        escolha = menu_inicial()
-        
-        if escolha == 0:
-            limpar_tela()
-            print("Carregando fitas magnéticas...")
-            time.sleep(1)
-            print("A fita VHS começa a rodar... Iniciando a investigação de Ekul!\n")
-            time.sleep(1)
-            
-            meu_detetive = Personagem("Ekul")
-            meu_jogo = Game()
-            meu_jogo.iniciar_mapa()
-            meu_jogo.jogar(meu_detetive)
-            
-        elif escolha == 1:
-            limpar_tela()
-            print("Aviso: A função de carregar o jogo será implementada no futuro!")
-            input("\nPressione ENTER para voltar ao menu...")
-            
-        elif escolha == 2:
-            limpar_tela()
-            print("=== CRÉDITOS ===")
-            print("Desenvolvedor: Você")
-            print("Protagonista: Ekul")
-            print("Projeto: Aventuras de Ekul (Estilo Anos 80)")
-            input("\nPressione ENTER para voltar ao menu...")
+        # Renderiza as opções e coloca a setinha '
